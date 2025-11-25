@@ -1,5 +1,6 @@
 package ph.edu.comteq.thealpshotels
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,12 +10,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.text.SimpleDateFormat
@@ -36,15 +40,12 @@ fun BookingConfirmScreen(
     var children by remember { mutableIntStateOf(0) }
     var travelPurpose by remember { mutableStateOf("For sightseeing") }
     var paymentMethod by remember { mutableStateOf("Cash") }
-    
-    // Auto-calculate rooms based on total guests
+
     val totalGuests = adults + children
     val rooms = remember(totalGuests, room.room_total_number_of_guests) {
-        if (totalGuests == 0) 1 else
-            (totalGuests + room.room_total_number_of_guests - 1) / room.room_total_number_of_guests
+        if (totalGuests == 0) 1 else (totalGuests + room.room_total_number_of_guests - 1) / room.room_total_number_of_guests
     }
-    
-    // Auto-calculate price
+
     val price = remember(rooms, checkInDate, checkOutDate, travelPurpose) {
         calculatePrice(
             roomPrice = room.room_price_for_one_night,
@@ -54,15 +55,17 @@ fun BookingConfirmScreen(
             travelPurpose = travelPurpose
         )
     }
-    
+
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Booking Confirm",
+                        text = "Confirm Booking",
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
                     )
                 },
                 navigationIcon = {
@@ -70,14 +73,15 @@ fun BookingConfirmScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = Color(0xFF3F51B5)
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color(0xFF212121)
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
@@ -88,44 +92,40 @@ fun BookingConfirmScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
-            
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "You are going to reserve:",
-                fontSize = 16.sp,
-                color = Color(0xFF616161)
+                text = "You are about to reserve:",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = hotelDetails.hotel_name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121)
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Room details card
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = room.room_type,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "Bed: ${room.room_bed_type}",
-                        fontSize = 14.sp,
-                        color = Color(0xFF616161)
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -133,32 +133,30 @@ fun BookingConfirmScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Total number of guests: $totalGuests",
-                            fontSize = 14.sp,
-                            color = Color(0xFF616161)
+                            text = "Total guests: $totalGuests",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = "€ ${room.room_price_for_one_night.toInt()}",
-                            fontSize = 18.sp,
+                            style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4CAF50)
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             Text(
-                text = "Form",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121)
+                text = "Your Details",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Name inputs
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -178,10 +176,9 @@ fun BookingConfirmScreen(
                     shape = RoundedCornerShape(8.dp)
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Date inputs
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -189,133 +186,64 @@ fun BookingConfirmScreen(
                 OutlinedTextField(
                     value = checkInDate,
                     onValueChange = { newValue ->
-                        // Allow free typing, but format when a valid date is entered
                         val formatted = parseAndFormatDate(newValue)
                         checkInDate = formatted ?: newValue
                     },
                     label = { Text("Check-in date") },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
-                    placeholder = { Text("09/10/2024") }
+                    placeholder = { Text("MM/DD/YYYY") }
                 )
                 OutlinedTextField(
                     value = checkOutDate,
                     onValueChange = { newValue ->
-                        // Allow free typing, but format when a valid date is entered
                         val formatted = parseAndFormatDate(newValue)
                         checkOutDate = formatted ?: newValue
                     },
                     label = { Text("Check-out date") },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
-                    placeholder = { Text("09/15/2024") }
+                    placeholder = { Text("MM/DD/YYYY") }
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Adults, Children, Rooms
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                CounterCard("Adults", adults, { if (adults > 1) adults-- }, { adults++ }, Modifier.weight(1f))
+                CounterCard("Children", children, { if (children > 0) children-- }, { children++ }, Modifier.weight(1f))
+
                 Card(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(vertical = 12.dp, horizontal = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text("Adults", fontSize = 12.sp, color = Color(0xFF616161))
+                        Text("Room(s)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(
-                                onClick = { if (adults > 1) adults-- },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Text("$adults", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            IconButton(
-                                onClick = { adults++ },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-                
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Children", fontSize = 12.sp, color = Color(0xFF616161))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            IconButton(
-                                onClick = { if (children > 0) children-- },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Text("$children", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            IconButton(
-                                onClick = { children++ },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-                
-                Card(
-                    modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Room", fontSize = 12.sp, color = Color(0xFF616161))
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("$rooms", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text("$rooms", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // Travel purpose radio buttons
+
             Text(
-                text = "Travel for business?",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF212121)
+                text = "Are you travelling for business?",
+                style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -328,9 +256,9 @@ fun BookingConfirmScreen(
                         selected = travelPurpose == "For sightseeing",
                         onClick = { travelPurpose = "For sightseeing" }
                     )
-                    Text("For sightseeing", modifier = Modifier.padding(start = 4.dp))
+                    Text("No, for leisure", modifier = Modifier.padding(start = 4.dp))
                 }
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable { travelPurpose = "For business with a meeting room + € 150" }
@@ -339,78 +267,52 @@ fun BookingConfirmScreen(
                         selected = travelPurpose == "For business with a meeting room + € 150",
                         onClick = { travelPurpose = "For business with a meeting room + € 150" }
                     )
-                    Text("For business with a meeting room + € 150", modifier = Modifier.padding(start = 4.dp))
+                    Text("Yes (+ €150)", modifier = Modifier.padding(start = 4.dp))
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // Payment method radio buttons
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.Bottom
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Which way to pay?",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF212121)
+                        text = "Payment Method",
+                        style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { paymentMethod = "Cash" }
-                    ) {
-                        RadioButton(
-                            selected = paymentMethod == "Cash",
-                            onClick = { paymentMethod = "Cash" }
-                        )
-                        Text("Cash", modifier = Modifier.padding(start = 4.dp))
-                    }
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { paymentMethod = "Credit card" }
-                    ) {
-                        RadioButton(
-                            selected = paymentMethod == "Credit card",
-                            onClick = { paymentMethod = "Credit card" }
-                        )
-                        Text("Credit card", modifier = Modifier.padding(start = 4.dp))
-                    }
-                    
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.clickable { paymentMethod = "E-Pay" }
-                    ) {
-                        RadioButton(
-                            selected = paymentMethod == "E-Pay",
-                            onClick = { paymentMethod = "E-Pay" }
-                        )
-                        Text("E-Pay", modifier = Modifier.padding(start = 4.dp))
+                    listOf("Cash", "Credit Card", "E-Pay").forEach { method ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.clickable { paymentMethod = method }
+                        ) {
+                            RadioButton(
+                                selected = paymentMethod == method,
+                                onClick = { paymentMethod = method }
+                            )
+                            Text(method, modifier = Modifier.padding(start = 4.dp))
+                        }
                     }
                 }
-                
-                // Price display
+
                 Column(
                     horizontalAlignment = Alignment.End,
-                    modifier = Modifier.padding(start = 16.dp)
                 ) {
+                    Text("Total Price", style = MaterialTheme.typography.titleMedium)
                     Text(
                         text = "€ ${price.toInt()}",
-                        fontSize = 32.sp,
+                        style = MaterialTheme.typography.displaySmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4CAF50)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
-            // Book now button
+
             Button(
                 onClick = {
                     if (validateBooking(firstName, lastName, checkInDate, checkOutDate)) {
@@ -435,71 +337,83 @@ fun BookingConfirmScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF3F51B5)
-                )
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Book now",
-                    fontSize = 18.sp,
+                    text = "Book Now",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+fun CounterCard(
+    label: String,
+    value: Int,
+    onDecrement: () -> Unit,
+    onIncrement: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onDecrement, modifier = Modifier.size(32.dp)) {
+                    Text("-", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+                Text("$value", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                IconButton(onClick = onIncrement, modifier = Modifier.size(32.dp)) {
+                    Text("+", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                }
+            }
         }
     }
 }
 
 fun parseAndFormatDate(input: String): String? {
     if (input.isEmpty() || input.length < 4) return null
-    
-    // Check if already in target format (e.g., "Tue, Sep 10, 2024")
+
     val targetFormat = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.US)
     try {
         targetFormat.parse(input)
-        return input // Already in correct format
+        return input
     } catch (_: Exception) {
-        // Continue to try other formats
     }
-    
-    // Try format: 09/10/2024
-    try {
-        val format1 = SimpleDateFormat("MM/dd/yyyy", Locale.US)
-        format1.isLenient = false
-        val date = format1.parse(input)
-        if (date != null) {
-            return targetFormat.format(date)
+
+    val formats = listOf(
+        SimpleDateFormat("MM/dd/yyyy", Locale.US),
+        SimpleDateFormat("MM-dd-yyyy", Locale.US),
+        SimpleDateFormat("MMM dd yyyy", Locale.US)
+    )
+
+    for (format in formats) {
+        try {
+            format.isLenient = false
+            val date = format.parse(input)
+            if (date != null) {
+                return targetFormat.format(date)
+            }
+        } catch (_: Exception) {
         }
-    } catch (_: Exception) {
-        // Continue
     }
-    
-    // Try format: 09-10-2024
-    try {
-        val format2 = SimpleDateFormat("MM-dd-yyyy", Locale.US)
-        format2.isLenient = false
-        val date = format2.parse(input)
-        if (date != null) {
-            return targetFormat.format(date)
-        }
-    } catch (_: Exception) {
-        // Continue
-    }
-    
-    // Try format: Sep 10 2024
-    try {
-        val format3 = SimpleDateFormat("MMM dd yyyy", Locale.US)
-        format3.isLenient = false
-        val date = format3.parse(input)
-        if (date != null) {
-            return targetFormat.format(date)
-        }
-    } catch (_: Exception) {
-        // Continue
-    }
-    
+
     return null
 }
 
@@ -514,22 +428,20 @@ fun calculatePrice(
     try {
         val checkIn = dateFormat.parse(checkInDate)
         val checkOut = dateFormat.parse(checkOutDate)
-        
+
         if (checkIn != null && checkOut != null && checkOut.after(checkIn)) {
             val days = ((checkOut.time - checkIn.time) / (1000 * 60 * 60 * 24)).toInt()
             var totalPrice = roomPrice * rooms * days
-            
-            // Add business meeting room fee
-            if (travelPurpose == "For business with a meeting room + € 150") {
+
+            if (travelPurpose.contains("business", ignoreCase = true)) {
                 totalPrice += 150.0
             }
-            
+
             return totalPrice
         }
     } catch (_: Exception) {
-        // Return base price if date parsing fails
     }
-    
+
     return roomPrice * rooms
 }
 
@@ -541,18 +453,18 @@ fun validateBooking(
 ): Boolean {
     if (firstName.isEmpty() || firstName == "First Name") return false
     if (lastName.isEmpty() || lastName == "Last Name") return false
-    
+
     val dateFormat = SimpleDateFormat("EEE, MMM dd, yyyy", Locale.US)
     try {
         val checkIn = dateFormat.parse(checkInDate)
         val checkOut = dateFormat.parse(checkOutDate)
-        
+
         if (checkIn == null || checkOut == null) return false
         if (!checkOut.after(checkIn)) return false
     } catch (_: Exception) {
         return false
     }
-    
+
     return true
 }
 
@@ -562,70 +474,75 @@ fun MyBookingsScreen(
     bookings: List<Booking>,
     onBackClick: () -> Unit
 ) {
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "My bookings",
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF212121)
+                        text = "My Bookings",
+                        fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
-                            tint = Color(0xFF3F51B5)
+                            contentDescription = "Back"
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color(0xFF212121)
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                scrollBehavior = scrollBehavior
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Text(
-                text = "List of my bookings",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121)
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            if (bookings.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+        if (bookings.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+                    .padding(16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Outlined.EventBusy,
+                        contentDescription = "No bookings",
+                        modifier = Modifier.size(80.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
                     Text(
-                        text = "No bookings yet",
-                        fontSize = 16.sp,
-                        color = Color.Gray
+                        text = "You have no bookings yet.",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                    )
+                    Text(
+                        text = "Your reservations will appear here once you've made a booking.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
-            } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    itemsIndexed(bookings) { index, booking ->
-                        BookingCard(
-                            bookingNumber = index + 1,
-                            booking = booking
-                        )
-                    }
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                itemsIndexed(bookings) { _, booking ->
+                    BookingCard(booking = booking)
                 }
             }
         }
@@ -633,63 +550,74 @@ fun MyBookingsScreen(
 }
 
 @Composable
-fun BookingCard(bookingNumber: Int, booking: Booking) {
+fun BookingCard(booking: Booking) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = booking.hotelName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Booking #${booking.bookingId.toString().takeLast(4)}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Text(
-                    text = "$bookingNumber",
-                    fontSize = 24.sp,
+                    text = "€${booking.price.toInt()}",
+                    style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "${booking.firstName} ${booking.lastName}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
-                )
-                Text(
-                    text = booking.hotelName,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF212121)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${booking.checkInDate} to ${booking.checkOutDate}",
-                    fontSize = 14.sp,
-                    color = Color(0xFF616161)
-                )
-                Text(
-                    text = "${booking.adults} Adults, ${booking.children} Children, ${booking.rooms} Room",
-                    fontSize = 14.sp,
-                    color = Color(0xFF616161)
-                )
-                Text(
-                    text = "${booking.travelPurpose} Pay with ${booking.paymentMethod.lowercase()}",
-                    fontSize = 14.sp,
-                    color = Color(0xFF616161)
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 16.dp)
                 )
             }
-            
+
+            Divider(modifier = Modifier.padding(vertical = 12.dp))
+
+            InfoRowWithIcon(Icons.Outlined.Person, "Guest", "${booking.firstName} ${booking.lastName}")
+            InfoRowWithIcon(Icons.Outlined.CalendarToday, "Dates", "${booking.checkInDate} to ${booking.checkOutDate}")
+            InfoRowWithIcon(Icons.Outlined.Group, "Guests", "${booking.adults} Adults, ${booking.children} Children (${booking.rooms} Room/s)")
+            InfoRowWithIcon(Icons.Outlined.WorkOutline, "Purpose", booking.travelPurpose)
+            InfoRowWithIcon(Icons.Outlined.CreditCard, "Payment", "Paid with ${booking.paymentMethod}")
+        }
+    }
+}
+
+@Composable
+private fun InfoRowWithIcon(icon: ImageVector, label: String, value: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(20.dp),
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(Modifier.width(16.dp))
+        Column {
             Text(
-                text = "€ ${booking.price.toInt()}",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF212121),
-                modifier = Modifier.padding(start = 16.dp)
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
             )
         }
     }
