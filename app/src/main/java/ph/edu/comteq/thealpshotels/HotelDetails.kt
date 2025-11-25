@@ -1,6 +1,7 @@
 package ph.edu.comteq.thealpshotels
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun HotelDetailsScreen(hotelDetails: HotelDetails, onBackClick: () -> Unit) {
+fun HotelDetailsScreen(hotelDetails: HotelDetails, onBackClick: () -> Unit, onRoomClick: (Room, HotelDetails) -> Unit = { _, _ -> }) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabTitles = listOf("Guest Reviews", "Room Selection")
 
@@ -185,7 +186,8 @@ fun HotelDetailsScreen(hotelDetails: HotelDetails, onBackClick: () -> Unit) {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(20.dp))
-                                    .background(Color.White),
+                                    .background(Color.White)
+                                    .clickable { onRoomClick(room, hotelDetails) },
                                 shape = RoundedCornerShape(20.dp),
                                 colors = CardDefaults.cardColors(containerColor = Color.White),
                                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
@@ -234,7 +236,7 @@ fun HotelDetailsScreen(hotelDetails: HotelDetails, onBackClick: () -> Unit) {
                                             color = Color(0xFF4CAF50)
                                         )
                                         Button(
-                                            onClick = {},
+                                            onClick = { onRoomClick(room, hotelDetails) },
                                             shape = RoundedCornerShape(12.dp),
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color(0xFF3F51B5)

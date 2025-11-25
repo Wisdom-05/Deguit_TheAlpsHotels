@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Person
@@ -46,6 +45,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             TheAlpsHotelsTheme {
                 val navController = rememberNavController()
+                var bookings by remember { mutableStateOf<List<Booking>>(emptyList()) }
 
                 NavHost(navController = navController, startDestination = "home") {
 
@@ -71,7 +71,10 @@ class MainActivity : ComponentActivity() {
 
                     // Profile screen
                     composable("profile") {
-                        ProfileScreen(onBackClick = { navController.popBackStack() })
+                        ProfileScreen(
+                            onBackClick = { navController.popBackStack() },
+                            onMyBookingsClick = { navController.navigate("myBookings") }
+                        )
                     }
 
                     // Hotel details screen
@@ -83,15 +86,57 @@ class MainActivity : ComponentActivity() {
                             backStackEntry.arguments?.getString("hotelDetailsJson") ?: ""
                         val hotelDetails =
                             Gson().fromJson(Uri.decode(hotelDetailsJson), HotelDetails::class.java)
-                        HotelDetailsScreen(hotelDetails = hotelDetails) {
-                            navController.popBackStack()
-                        }
+                        HotelDetailsScreen(
+                            hotelDetails = hotelDetails,
+                            onBackClick = { navController.popBackStack() },
+                            onRoomClick = { room, hotel ->
+                                val bookingData = BookingData(room, hotel)
+                                val bookingDataJson = Uri.encode(Gson().toJson(bookingData))
+                                navController.navigate("booking/$bookingDataJson")
+                            }
+                        )
+                    }
+
+                    // Booking confirm screen
+                    composable(
+                        route = "booking/{bookingDataJson}",
+                        arguments = listOf(navArgument("bookingDataJson") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val bookingDataJson =
+                            backStackEntry.arguments?.getString("bookingDataJson") ?: ""
+                        val bookingData =
+                            Gson().fromJson(Uri.decode(bookingDataJson), BookingData::class.java)
+                        BookingConfirmScreen(
+                            hotelDetails = bookingData.hotelDetails,
+                            room = bookingData.room,
+                            onBackClick = { navController.popBackStack() },
+                            onBookingComplete = { booking ->
+                                bookings = bookings + booking
+                                navController.navigate("myBookings") {
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            }
+                        )
+                    }
+
+                    // My bookings screen
+                    composable("myBookings") {
+                        MyBookingsScreen(
+                            bookings = bookings,
+                            onBackClick = { navController.popBackStack() }
+                        )
                     }
                 }
             }
         }
     }
 }
+
+// Helper data class for navigation
+data class BookingData(
+    val room: Room,
+    val hotelDetails: HotelDetails
+)
 
 // ---------------- HOMEPAGE -----------------
 
@@ -227,7 +272,7 @@ fun HotelCard(hotel: Hotel, onClick: () -> Unit) {
 // ---------------- PROFILE SCREEN -----------------
 
 @Composable
-fun ProfileScreen(onBackClick: () -> Unit) {
+fun ProfileScreen(onBackClick: () -> Unit, onMyBookingsClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -331,6 +376,23 @@ fun ProfileScreen(onBackClick: () -> Unit) {
                 color = Color.DarkGray,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onMyBookingsClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF3F51B5)
+                )
+            ) {
+                Text(
+                    text = "My Bookings",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }

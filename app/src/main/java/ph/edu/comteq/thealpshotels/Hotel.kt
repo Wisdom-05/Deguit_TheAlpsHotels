@@ -34,3 +34,19 @@ data class Room(
     val room_features: List<String>,
     val room_price_for_one_night: Double
 )
+
+data class Booking(
+    val bookingId: Int,
+    val firstName: String,
+    val lastName: String,
+    val hotelName: String,
+    val roomType: String,
+    val checkInDate: String,
+    val checkOutDate: String,
+    val adults: Int,
+    val children: Int,
+    val rooms: Int,
+    val travelPurpose: String, // "For sightseeing" or "For business with a meeting room"
+    val paymentMethod: String, // "Cash", "Credit card", or "E-Pay"
+    val price: Double
+)
